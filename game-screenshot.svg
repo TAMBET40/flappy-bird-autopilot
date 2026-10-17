@@ -18,16 +18,16 @@
   <path d="M250 431 359 372 444 407 551 330 674 431Z" fill="#383838"/>
   <path d="M531 431 637 375 714 405 804 347 830 431Z" fill="#242424"/>
   <g stroke="#eee" stroke-width="3">
-    <rect x="285" y="0" width="62" height="164" fill="#777"/>
+    <rect x="285" y="64" width="62" height="100" fill="#777"/>
     <rect x="278" y="151" width="76" height="13" fill="#bdbdbd"/>
     <rect x="285" y="338" width="62" height="164" fill="#777"/>
     <rect x="278" y="338" width="76" height="13" fill="#bdbdbd"/>
-    <rect x="573" y="0" width="62" height="205" fill="#777"/>
+    <rect x="573" y="64" width="62" height="141" fill="#777"/>
     <rect x="566" y="192" width="76" height="13" fill="#bdbdbd"/>
     <rect x="573" y="379" width="62" height="123" fill="#777"/>
     <rect x="566" y="379" width="76" height="13" fill="#bdbdbd"/>
   </g>
-  <g fill="#bdbdbd"><rect x="300" y="4" width="8" height="134"/><rect x="316" y="4" width="3" height="134"/><rect x="588" y="4" width="8" height="175"/><rect x="604" y="4" width="3" height="175"/></g>
+  <g fill="#bdbdbd"><rect x="300" y="68" width="8" height="83"/><rect x="316" y="68" width="3" height="83"/><rect x="588" y="68" width="8" height="124"/><rect x="604" y="68" width="3" height="124"/></g>
   <g stroke="#fff" stroke-width="2"><path d="M283 161h66M571 202h66M283 341h66M571 382h66"/></g>
   <g fill="#999"><rect x="191" y="266" width="5" height="11"/><rect x="196" y="261" width="24" height="20"/></g>
   <rect x="201" y="257" width="24" height="16" fill="#999" stroke="#eee"/>
