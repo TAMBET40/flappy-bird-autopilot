@@ -2,38 +2,38 @@
 
 A Flappy Bird-inspired game with an automated pilot, built with Python and Tkinter.
 
-## Allalaadimine
+## Download
 
-### ZIP-failina
+### Download as a ZIP file
 
-1. Ava selle repositooriumi avaleht.
-2. Vajuta **Code** ja vali **Download ZIP**.
-3. Paki ZIP-fail lahti.
+1. Open this repository's homepage.
+2. Click **Code**, then select **Download ZIP**.
+3. Extract the ZIP file.
 
-### Git-iga
+### Clone with Git
 
-Ava terminal või PowerShell ja käivita:
+Open a terminal or PowerShell and run:
 
 ```sh
 git clone https://github.com/TAMBET40/flappy-bird-autopilot.git
 cd flappy-bird-autopilot
 ```
 
-## Käivitamine
+## Run the game
 
-Linuxis:
+On Linux:
 
 ```sh
 python3 flappy_autopilot.py
 ```
 
-Windowsi PowerShellis:
+On Windows PowerShell:
 
 ```powershell
 py flappy_autopilot.py
 ```
 
-Vaja on Pythoni 3 versiooni. Mäng kasutab Tkinterit. Kui Tkinter Linuxis puudub (nt Debian või Ubuntu), paigalda see käsuga:
+Python 3 is required. The game uses Tkinter. If Tkinter is missing on Linux (for example, on Debian or Ubuntu), install it with:
 
 ```sh
 sudo apt install python3-tk
