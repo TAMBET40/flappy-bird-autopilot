@@ -9,6 +9,7 @@ BIRD_X = 190
 PIPE_WIDTH = 76
 PIPE_GAP = 174
 PIPE_SPACING = 278
+PLAY_TOP = 64
 
 
 class FlappyAutopilot:
@@ -85,7 +86,7 @@ class FlappyAutopilot:
 		bird_right = BIRD_X + 15
 		bird_top = self.bird_y - 12
 		bird_bottom = self.bird_y + 12
-		if bird_top < 38 or bird_bottom > HEIGHT - GROUND_HEIGHT:
+		if bird_top < PLAY_TOP or bird_bottom > HEIGHT - GROUND_HEIGHT:
 			self.dead = True
 		for pipe in self.pipes:
 			if bird_right > pipe["x"] and bird_left < pipe["x"] + PIPE_WIDTH:
@@ -134,9 +135,9 @@ class FlappyAutopilot:
 		pipe_color = "#777777"
 		edge_color = "#eeeeee"
 		cap = 13
-		canvas.create_rectangle(x + 7, 0, x + PIPE_WIDTH - 7, gap_top, fill=pipe_color, outline=edge_color, width=3)
-		canvas.create_rectangle(x + 15, 4, x + 23, gap_top - cap, fill="#bdbdbd", outline="")
-		canvas.create_rectangle(x + 31, 4, x + 34, gap_top - cap, fill="#999999", outline="")
+		canvas.create_rectangle(x + 7, PLAY_TOP, x + PIPE_WIDTH - 7, gap_top, fill=pipe_color, outline=edge_color, width=3)
+		canvas.create_rectangle(x + 15, PLAY_TOP + 4, x + 23, gap_top - cap, fill="#bdbdbd", outline="")
+		canvas.create_rectangle(x + 31, PLAY_TOP + 4, x + 34, gap_top - cap, fill="#999999", outline="")
 		canvas.create_rectangle(x, gap_top - cap, x + PIPE_WIDTH, gap_top, fill="#bdbdbd", outline=edge_color, width=3)
 		canvas.create_line(x + 5, gap_top - 3, x + PIPE_WIDTH - 5, gap_top - 3, fill="#ffffff", width=2)
 		canvas.create_rectangle(x + 7, gap_bottom, x + PIPE_WIDTH - 7, HEIGHT - GROUND_HEIGHT, fill=pipe_color, outline=edge_color, width=3)
@@ -162,22 +163,23 @@ class FlappyAutopilot:
 		for pipe in self.pipes:
 			self.draw_pipe(pipe)
 		self.draw_bird()
-		self.canvas.create_rectangle(22, 20, 240, 57, fill="#111111", outline="#777777")
-		self.canvas.create_text(33, 27, anchor="nw", text="PLAYER 1", fill="#eeeeee", font=("TkFixedFont", 10, "bold"))
-		self.canvas.create_oval(34, 44, 41, 51, fill="#ffffff", outline="")
-		self.canvas.create_text(49, 39, anchor="nw", text="AUTO PILOT", fill="#aaaaaa", font=("TkFixedFont", 8, "bold"))
-		self.canvas.create_rectangle(WIDTH / 2 - 51, 15, WIDTH / 2 + 51, 59, fill="#111111", outline="#aaaaaa", width=2)
-		self.canvas.create_text(WIDTH / 2, 36, text=f"{self.score:03d}", fill="#ffffff", font=("TkFixedFont", 24, "bold"))
-		self.canvas.create_rectangle(WIDTH - 223, 20, WIDTH - 22, 57, fill="#111111", outline="#777777")
-		self.canvas.create_text(WIDTH - 33, 27, anchor="ne", text="FLAPPY 1984", fill="#eeeeee", font=("TkFixedFont", 10, "bold"))
-		self.canvas.create_text(WIDTH - 33, 43, anchor="ne", text=f"HI  {self.best_score:03d}", fill="#aaaaaa", font=("TkFixedFont", 8, "bold"))
-		self.canvas.create_line(22, 63, WIDTH - 22, 63, fill="#777777", width=2)
+		self.canvas.create_rectangle(22, 20, 240, 57, fill="#111111", outline="#777777", tags="hud")
+		self.canvas.create_text(33, 27, anchor="nw", text="PLAYER 1", fill="#eeeeee", font=("TkFixedFont", 10, "bold"), tags="hud")
+		self.canvas.create_oval(34, 44, 41, 51, fill="#ffffff", outline="", tags="hud")
+		self.canvas.create_text(49, 39, anchor="nw", text="AUTO PILOT", fill="#aaaaaa", font=("TkFixedFont", 8, "bold"), tags="hud")
+		self.canvas.create_rectangle(WIDTH / 2 - 51, 15, WIDTH / 2 + 51, 59, fill="#111111", outline="#aaaaaa", width=2, tags="hud")
+		self.canvas.create_text(WIDTH / 2, 36, text=f"{self.score:03d}", fill="#ffffff", font=("TkFixedFont", 24, "bold"), tags="hud")
+		self.canvas.create_rectangle(WIDTH - 223, 20, WIDTH - 22, 57, fill="#111111", outline="#777777", tags="hud")
+		self.canvas.create_text(WIDTH - 33, 27, anchor="ne", text="FLAPPY 1984", fill="#eeeeee", font=("TkFixedFont", 10, "bold"), tags="hud")
+		self.canvas.create_text(WIDTH - 33, 43, anchor="ne", text=f"HI  {self.best_score:03d}", fill="#aaaaaa", font=("TkFixedFont", 8, "bold"), tags="hud")
+		self.canvas.create_line(22, 63, WIDTH - 22, 63, fill="#777777", width=2, tags="hud")
 		if self.dead:
 			self.canvas.create_rectangle(0, 0, WIDTH, HEIGHT, fill="#101010", stipple="gray50", outline="")
 			self.canvas.create_rectangle(WIDTH / 2 - 170, HEIGHT / 2 - 50, WIDTH / 2 + 170, HEIGHT / 2 + 53, fill="#111111", outline="#eeeeee", width=3)
 			self.canvas.create_text(WIDTH / 2, HEIGHT / 2 - 19, text="GAME OVER", fill="#ffffff", font=("TkFixedFont", 24, "bold"))
 			self.canvas.create_line(WIDTH / 2 - 135, HEIGHT / 2 + 4, WIDTH / 2 + 135, HEIGHT / 2 + 4, fill="#777777")
 			self.canvas.create_text(WIDTH / 2, HEIGHT / 2 + 27, text=f"SCORE {self.score:03d}  /  RESTARTING", fill="#bdbdbd", font=("TkFixedFont", 11, "bold"))
+		self.canvas.tag_raise("hud")
 
 	def tick(self):
 		self.update()
