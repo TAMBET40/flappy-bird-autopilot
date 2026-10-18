@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101312">
+  <meta name="description" content="A touch-friendly retro Flappy Bird game with an optional autopilot.">
+  <title>Flappy 1984 | Retro Autopilot</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f2f1e8;
+      --muted: #a5aaa2;
+      --line: #59605b;
+      --panel: #151a18;
+      --green: #b7dc80;
+      --red: #e77d62;
+      --sky: #14201d;
+      --ground: #242a25;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      min-width: 280px;
+      min-height: 100%;
+      margin: 0;
+      background: #101312;
+      color: var(--ink);
+      font-family: "Courier New", monospace;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .cabinet {
+      width: min(100%, 460px);
+      height: min(94dvh, 820px);
+      height: min(94vh, 820px);
+      height: min(94dvh, 820px);
+      min-height: 380px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      border: 2px solid #7c8279;
+      background: #090c0b;
+      box-shadow: 0 0 0 5px #1d211f, 0 16px 50px #0009;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+      min-height: 58px;
+      padding: 7px 10px;
+      border-bottom: 2px solid #777e75;
+      background: #111614;
+    }
+
+    .identity { min-width: 0; }
+    .eyebrow { color: var(--muted); font-size: 9px; line-height: 1.35; }
+    .identity strong { display: block; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .scorebox { min-width: 62px; padding: 3px 8px 2px; border: 1px solid #969b91; background: #080a09; text-align: center; }
+    .scorebox span { display: block; color: var(--muted); font-size: 8px; }
+    .scorebox strong { font-size: 21px; line-height: 1.1; }
+
+    .mode-button {
+      justify-self: end;
+      min-height: 38px;
+      max-width: 116px;
+      padding: 6px 8px;
+      border: 1px solid #727970;
+      border-radius: 0;
+      background: #202623;
+      color: var(--ink);
+      font: inherit;
+      font-size: 9px;
+      line-height: 1.25;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .mode-button[aria-pressed="true"] { border-color: var(--green); color: var(--green); }
+    .mode-button:focus-visible, .action:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+
+    .screen {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+      background: var(--sky);
+    }
+
+    canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: clamp(10px, 2.4dvh, 18px);
+      padding: 22px 16px;
+      background: #080b0acc;
+      text-align: center;
+    }
+
+    .overlay[hidden] { display: none; }
+    .dialog {
+      width: min(100%, 360px);
+      padding: clamp(15px, 5vw, 24px);
+      border: 2px solid #ebeee2;
+      outline: 1px solid #59605b;
+      outline-offset: -7px;
+      background: #111614;
+    }
+
+    h1 { margin: 0; font-size: clamp(24px, 8vw, 36px); line-height: 1; }
+    .subtitle { margin: 12px 0 18px; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .choices { display: grid; gap: 9px; }
+
+    .action {
+      width: 100%;
+      min-height: 54px;
+      padding: 10px;
+      border: 1px solid #d8ddd2;
+      border-radius: 0;
+      background: #232b26;
+      color: var(--ink);
+      font: inherit;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .action strong, .action small { display: block; }
+    .action strong { font-size: 12px; }
+    .action small { margin-top: 4px; color: #b7bcb3; font-size: 9px; }
+    .action.primary { border-color: var(--green); }
+    .action.primary strong { color: var(--green); }
+    .action.secondary { border-color: #e3a28c; }
+    .action.secondary strong { color: #f1b09a; }
+    .hint { margin: 13px 0 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
+
+    .bottombar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 42px;
+      padding: 7px 10px;
+      border-top: 1px solid #535a53;
+      color: var(--muted);
+      font-size: 9px;
+      background: #111614;
+    }
+    .live { display: inline-flex; align-items: center; gap: 6px; }
+    .live::before { width: 7px; height: 7px; border-radius: 50%; background: var(--green); content: ""; }
+
+    @media (max-height: 460px) and (orientation: landscape) {
+      body { padding: 6px; }
+      .cabinet { width: min(96vw, 900px); height: 96dvh; grid-template-rows: 46px 1fr 30px; }
+      .topbar { min-height: 0; padding: 3px 10px; }
+      .bottombar { min-height: 0; padding: 4px 10px; }
+      .overlay { gap: 6px; padding: 8px; }
+      .dialog { width: min(94%, 520px); padding: 13px; }
+      h1 { font-size: 25px; }
+      .subtitle { margin: 5px 0 8px; }
+      .choices { grid-template-columns: 1fr 1fr; }
+      .action { min-height: 46px; }
+      .hint { margin-top: 7px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="cabinet" aria-label="Flappy 1984 game">
+    <header class="topbar">
+      <div class="identity">
+        <span class="eyebrow">RETRO FLIGHT SIM</span>
+        <strong id="pilotLabel">PILOT SELECT</strong>
+      </div>
+      <div class="scorebox" aria-live="polite">
+        <span>SCORE</span>
+        <strong id="score">000</strong>
+      </div>
+      <button class="mode-button" id="modeToggle" type="button" aria-pressed="true">AUTOPILOT: ON</button>
+    </header>
+
+    <section class="screen" id="screen" aria-label="Game screen">
+      <canvas id="game" aria-label="Game area. Tap to flap when autopilot is off."></canvas>
+      <div class="overlay" id="overlay">
+        <div class="dialog">
+          <h1 id="dialogTitle">FLAPPY 1984</h1>
+          <p class="subtitle" id="dialogText">A pocket-sized flight through the neon night.<br>Choose who takes the controls.</p>
+          <div class="choices" id="choices">
+            <button class="action primary" id="autoStart" type="button"><strong>AUTOPILOT ON</strong><small>Computer flies for you</small></button>
+            <button class="action secondary" id="manualStart" type="button"><strong>AUTOPILOT OFF</strong><small>You fly · tap or press SPACE</small></button>
+          </div>
+          <button class="action primary" id="restart" type="button" hidden><strong>PLAY AGAIN</strong><small>Tap to start a new flight</small></button>
+          <p class="hint">ANDROID READY · PORTRAIT OR LANDSCAPE</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="bottombar">
+      <span class="live" id="status">SELECT PILOT</span>
+      <span>HI <strong id="best">000</strong></span>
+      <span>1984 / 01</span>
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      const canvas = document.querySelector("#game");
+      const ctx = canvas.getContext("2d");
+      const screen = document.querySelector("#screen");
+      const overlay = document.querySelector("#overlay");
+      const title = document.querySelector("#dialogTitle");
+      const dialogText = document.querySelector("#dialogText");
+      const choices = document.querySelector("#choices");
+      const restartButton = document.querySelector("#restart");
+      const modeToggle = document.querySelector("#modeToggle");
+      const scoreLabel = document.querySelector("#score");
+      const bestLabel = document.querySelector("#best");
+      const pilotLabel = document.querySelector("#pilotLabel");
+      const statusLabel = document.querySelector("#status");
+      const W = 400;
+      const H = 700;
+      const groundY = 650;
+      const birdX = 112;
+      const birdW = 28;
+      const birdH = 22;
+      const pipeW = 62;
+      const gapH = 190;
+      const pipeStep = 230;
+      const topLimit = 76;
+      const gravity = 0.22;
+      const flapSpeed = -5.4;
+      const maxFall = 6.5;
+      let scale = 1;
+      let dpr = 1;
+      let started = false;
+      let gameOver = false;
+      let autoplay = true;
+      let birdY = 320;
+      let velocity = 0;
+      let score = 0;
+      let best = Number(localStorage.getItem("flappy1984Best") || 0);
+      let pipes = [];
+      let lastTime = 0;
+      let accumulator = 0;
+      let frame = 0;
+
+      bestLabel.textContent = String(best).padStart(3, "0");
+
+      function resize() {
+        const rect = screen.getBoundingClientRect();
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        scale = Math.min(rect.width / W, rect.height / H);
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        ctx.setTransform(dpr * scale, 0, 0, dpr * scale,
+          (rect.width * dpr - W * dpr * scale) / 2,
+          (rect.height * dpr - H * dpr * scale) / 2);
+        draw();
+      }
+
+      function reset() {
+        birdY = 320;
+        velocity = 0;
+        score = 0;
+        frame = 0;
+        gameOver = false;
+        pipes = [
+          { x: 490, gap: 255, passed: false },
+          { x: 490 + pipeStep, gap: 345, passed: false },
+          { x: 490 + pipeStep * 2, gap: 235, passed: false }
+        ];
+        scoreLabel.textContent = "000";
+      }
+
+      function start(auto) {
+        autoplay = auto;
+        started = true;
+        reset();
+        overlay.hidden = true;
+        modeToggle.setAttribute("aria-pressed", String(auto));
+        modeToggle.textContent = `AUTOPILOT: ${auto ? "ON" : "OFF"}`;
+        pilotLabel.textContent = auto ? "AUTO PILOT" : "MANUAL PILOT";
+        statusLabel.textContent = auto ? "AUTO FLIGHT" : "TAP TO FLAP";
+      }
+
+      function flap() {
+        if (!started || autoplay || gameOver) return;
+        velocity = flapSpeed;
+        statusLabel.textContent = "TAP TO FLAP";
+      }
+
+      function showGameOver() {
+        gameOver = true;
+        started = false;
+        if (score > best) {
+          best = score;
+          localStorage.setItem("flappy1984Best", String(best));
+          bestLabel.textContent = String(best).padStart(3, "0");
+        }
+        title.textContent = "FLIGHT OVER";
+        dialogText.innerHTML = `SCORE ${String(score).padStart(3, "0")} · BEST ${String(best).padStart(3, "0")}<br>Ready for another run?`;
+        choices.hidden = true;
+        restartButton.hidden = false;
+        overlay.hidden = false;
+        statusLabel.textContent = "FLIGHT OVER";
+      }
+
+      function update(dt) {
+        if (!started || gameOver) return;
+        frame += dt;
+        const pipe = pipes.find(item => item.x + pipeW > birdX - birdW / 2) || pipes[0];
+
+        if (autoplay) {
+          const targetY = pipe.gap + gapH * 0.57;
+          if (birdY > targetY + 7 && velocity > -1.4) velocity = flapSpeed;
+        }
+
+        velocity = Math.min(velocity + gravity * dt, maxFall);
+        birdY += velocity * dt;
+
+        for (const item of pipes) {
+          item.x -= 2.45 * dt;
+          if (!item.passed && item.x + pipeW < birdX) {
+            item.passed = true;
+            score += 1;
+            scoreLabel.textContent = String(score).padStart(3, "0");
+          }
+        }
+
+        while (pipes.length && pipes[0].x + pipeW < -5) pipes.shift();
+        while (pipes.length < 3) {
+          const last = pipes[pipes.length - 1];
+          pipes.push({
+            x: last.x + pipeStep,
+            gap: 150 + Math.random() * 285,
+            passed: false
+          });
+        }
+
+        const birdLeft = birdX - birdW * 0.42;
+        const birdRight = birdX + birdW * 0.48;
+        const birdTop = birdY - birdH * 0.42;
+        const birdBottom = birdY + birdH * 0.42;
+        if (birdTop < topLimit || birdBottom > groundY) return showGameOver();
+
+        for (const item of pipes) {
+          if (birdRight > item.x && birdLeft < item.x + pipeW &&
+              (birdTop < item.gap || birdBottom > item.gap + gapH)) {
+            return showGameOver();
+          }
+        }
+      }
+
+      function rect(x, y, width, height, fill, stroke = null) {
+        ctx.fillStyle = fill;
+        ctx.fillRect(x, y, width, height);
+        if (stroke) {
+          ctx.strokeStyle = stroke;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x + 1, y + 1, width - 2, height - 2);
+        }
+      }
+
+      function drawBackground() {
+        rect(0, 0, W, H, "#14201d");
+        ctx.fillStyle = "#dbe6cb";
+        for (let i = 0; i < 44; i++) {
+          const sx = (i * 97 + 23) % W;
+          const sy = 88 + ((i * 139 + 11) % 495);
+          const twinkle = Math.floor(frame / 24 + i) % 5 === 0;
+          rect(sx, sy, twinkle ? 3 : 2, twinkle ? 3 : 2, twinkle ? "#e9efcf" : "#9ba89c");
+        }
+        ctx.fillStyle = "#d9e3c9";
+        ctx.beginPath();
+        ctx.arc(326, 130, 31, 0, Math.PI * 2);
+        ctx.fill();
+        rect(331, 96, 30, 17, "#14201d");
+        rect(344, 111, 20, 18, "#14201d");
+        ctx.fillStyle = "#26332c";
+        ctx.beginPath();
+        ctx.moveTo(0, 518); ctx.lineTo(78, 452); ctx.lineTo(142, 491); ctx.lineTo(223, 423); ctx.lineTo(314, 518); ctx.fill();
+        ctx.fillStyle = "#334038";
+        ctx.beginPath();
+        ctx.moveTo(132, 520); ctx.lineTo(215, 470); ctx.lineTo(275, 497); ctx.lineTo(344, 439); ctx.lineTo(400, 490); ctx.lineTo(400, 520); ctx.fill();
+        rect(0, groundY, W, H - groundY, "#242a25");
+        rect(0, groundY, W, 8, "#dfe7cf");
+        rect(0, groundY + 8, W, 4, "#78847a");
+        ctx.fillStyle = "#a3ada1";
+        const offset = (frame * 2.45) % 32;
+        for (let x = -32; x < W + 32; x += 32) rect(x - offset, 681, 12, 4, "#a3ada1");
+      }
+
+      function drawPipe(item) {
+        const cap = 14;
+        const lowerY = item.gap + gapH;
+        rect(item.x + 6, topLimit, pipeW - 12, item.gap - topLimit, "#718174", "#e6edda");
+        rect(item.x, item.gap - cap, pipeW, cap, "#a8b6a2", "#e6edda");
+        rect(item.x + 12, topLimit + 6, 7, Math.max(0, item.gap - topLimit - cap - 5), "#c1ccb5");
+        rect(item.x + 28, topLimit + 6, 3, Math.max(0, item.gap - topLimit - cap - 5), "#a9b6a5");
+        rect(item.x + 6, lowerY, pipeW - 12, groundY - lowerY, "#718174", "#e6edda");
+        rect(item.x, lowerY, pipeW, cap, "#a8b6a2", "#e6edda");
+        rect(item.x + 12, lowerY + cap, 7, groundY - lowerY - cap - 5, "#c1ccb5");
+        rect(item.x + 28, lowerY + cap, 3, groundY - lowerY - cap - 5, "#a9b6a5");
+      }
+
+      function drawBird() {
+        const flap = Math.sin(frame / 4) * 3;
+        rect(birdX - 18, birdY - 4, 7, 11, "#849282");
+        rect(birdX - 12, birdY - 10, 25, 20, "#e5ebd7", "#fffef0");
+        rect(birdX - 8, birdY - 14 + flap, 15, 16, "#a6b1a1", "#d8e0cf");
+        rect(birdX + 3, birdY - 6, 5, 5, "#111614");
+        rect(birdX + 12, birdY - 1, 13, 8, "#d0a878", "#fff0c9");
+        rect(birdX - 8, birdY + 11, 7, 3, "#c79461");
+        rect(birdX + 4, birdY + 11, 7, 3, "#c79461");
+      }
+
+      function draw() {
+        const rectBounds = screen.getBoundingClientRect();
+        ctx.setTransform(dpr * scale, 0, 0, dpr * scale,
+          (rectBounds.width * dpr - W * dpr * scale) / 2,
+          (rectBounds.height * dpr - H * dpr * scale) / 2);
+        drawBackground();
+        if (started) {
+          for (const item of pipes) drawPipe(item);
+          drawBird();
+        } else if (!gameOver) {
+          for (const item of pipes) drawPipe(item);
+          drawBird();
+        }
+        ctx.strokeStyle = "#748078";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, W - 2, H - 2);
+      }
+
+      function loop(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        const elapsed = Math.min((timestamp - lastTime) / 16.667, 3);
+        lastTime = timestamp;
+        accumulator += elapsed;
+        while (accumulator >= 1) {
+          update(1);
+          accumulator -= 1;
+        }
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      document.querySelector("#autoStart").addEventListener("click", () => start(true));
+      document.querySelector("#manualStart").addEventListener("click", () => start(false));
+      restartButton.addEventListener("click", () => {
+        title.textContent = "FLAPPY 1984";
+        dialogText.innerHTML = "A pocket-sized flight through the neon night.<br>Choose who takes the controls.";
+        choices.hidden = false;
+        restartButton.hidden = true;
+        started = false;
+        gameOver = false;
+        overlay.hidden = false;
+        draw();
+      });
+      modeToggle.addEventListener("click", () => {
+        if (started) return;
+        autoplay = !autoplay;
+        modeToggle.setAttribute("aria-pressed", String(autoplay));
+        modeToggle.textContent = `AUTOPILOT: ${autoplay ? "ON" : "OFF"}`;
+      });
+      canvas.addEventListener("pointerdown", event => {
+        if (!event.isPrimary) return;
+        event.preventDefault();
+        flap();
+      });
+      window.addEventListener("keydown", event => {
+        if ((event.code === "Space" || event.code === "ArrowUp") && !event.repeat) {
+          event.preventDefault();
+          flap();
+        }
+      }, { passive: false });
+      window.addEventListener("resize", resize);
+      window.addEventListener("orientationchange", resize);
+      resize();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
