@@ -10,18 +10,60 @@ PIPE_WIDTH = 76
 PIPE_GAP = 174
 PIPE_SPACING = 278
 PLAY_TOP = 64
+GRAVITY = 0.19
+MAX_FALL_SPEED = 7.2
+FLAP_VELOCITY = -6.0
 
 
 class FlappyAutopilot:
 	def __init__(self, root):
 		self.root = root
-		self.root.title("Flappy Bird | Autopilot")
+		self.root.title("Flappy Bird | Retro Autopilot")
 		self.root.resizable(False, False)
 		self.canvas = tk.Canvas(root, width=WIDTH, height=HEIGHT, bg="#9be3df", highlightthickness=0)
 		self.canvas.pack()
 		self.best_score = 0
+		self.show_menu = True
+		self.autopilot = False
+		self.flap_keys_down = set()
+		self.canvas.bind("<Button-1>", self.on_click)
+		self.root.bind_all("<KeyPress-space>", self.on_key)
+		self.root.bind_all("<KeyPress-Up>", self.on_key)
+		self.root.bind_all("<KeyRelease-space>", self.on_key_release)
+		self.root.bind_all("<KeyRelease-Up>", self.on_key_release)
+		self.canvas.focus_set()
 		self.reset()
 		self.tick()
+
+	def start_game(self, autopilot):
+		self.autopilot = autopilot
+		self.show_menu = False
+		self.reset()
+
+	def on_click(self, event):
+		self.canvas.focus_set()
+		if self.show_menu:
+			clicked_tags = {
+				tag
+				for item in self.canvas.find_overlapping(event.x, event.y, event.x, event.y)
+				for tag in self.canvas.gettags(item)
+			}
+			if "menu_auto" in clicked_tags:
+				self.start_game(True)
+			elif "menu_manual" in clicked_tags:
+				self.start_game(False)
+		elif not self.autopilot and not self.dead:
+			self.flap()
+
+	def on_key(self, event):
+		if not self.show_menu and not self.autopilot and not self.dead:
+			if event.keysym in self.flap_keys_down:
+				return
+			self.flap_keys_down.add(event.keysym)
+			self.flap()
+
+	def on_key_release(self, event):
+		self.flap_keys_down.discard(event.keysym)
 
 	def reset(self):
 		self.bird_y = HEIGHT * 0.47
@@ -40,18 +82,20 @@ class FlappyAutopilot:
 			})
 
 	def flap(self):
-		self.velocity = -6.0
+		self.velocity = FLAP_VELOCITY
 
 	def next_pipe(self):
 		return min((pipe for pipe in self.pipes if pipe["x"] + PIPE_WIDTH >= BIRD_X), key=lambda pipe: pipe["x"])
 
 	def pilot(self):
 		pipe = self.next_pipe()
-		flap_height = pipe["gap"] + 128
-		if self.bird_y > flap_height and self.velocity > -1.5:
+		target_y = pipe["gap"] + PIPE_GAP / 2 + 40
+		if self.bird_y > target_y and self.velocity > -1.5:
 			self.flap()
 
 	def update(self):
+		if self.show_menu:
+			return
 		self.frame += 1
 		if self.dead:
 			self.restart_in -= 1
@@ -59,8 +103,9 @@ class FlappyAutopilot:
 				self.reset()
 			return
 
-		self.pilot()
-		self.velocity = min(self.velocity + 0.19, 7.2)
+		if self.autopilot:
+			self.pilot()
+		self.velocity = min(self.velocity + GRAVITY, MAX_FALL_SPEED)
 		self.bird_y += self.velocity
 
 		for pipe in self.pipes:
@@ -160,13 +205,17 @@ class FlappyAutopilot:
 	def draw(self):
 		self.canvas.delete("all")
 		self.draw_background()
+		if self.show_menu:
+			self.draw_menu()
+			return
 		for pipe in self.pipes:
 			self.draw_pipe(pipe)
 		self.draw_bird()
 		self.canvas.create_rectangle(22, 20, 240, 57, fill="#111111", outline="#777777", tags="hud")
 		self.canvas.create_text(33, 27, anchor="nw", text="PLAYER 1", fill="#eeeeee", font=("TkFixedFont", 10, "bold"), tags="hud")
 		self.canvas.create_oval(34, 44, 41, 51, fill="#ffffff", outline="", tags="hud")
-		self.canvas.create_text(49, 39, anchor="nw", text="AUTO PILOT", fill="#aaaaaa", font=("TkFixedFont", 8, "bold"), tags="hud")
+		mode_label = "AUTO PILOT" if self.autopilot else "MANUAL PILOT"
+		self.canvas.create_text(49, 39, anchor="nw", text=mode_label, fill="#aaaaaa", font=("TkFixedFont", 8, "bold"), tags="hud")
 		self.canvas.create_rectangle(WIDTH / 2 - 51, 15, WIDTH / 2 + 51, 59, fill="#111111", outline="#aaaaaa", width=2, tags="hud")
 		self.canvas.create_text(WIDTH / 2, 36, text=f"{self.score:03d}", fill="#ffffff", font=("TkFixedFont", 24, "bold"), tags="hud")
 		self.canvas.create_rectangle(WIDTH - 223, 20, WIDTH - 22, 57, fill="#111111", outline="#777777", tags="hud")
@@ -180,6 +229,19 @@ class FlappyAutopilot:
 			self.canvas.create_line(WIDTH / 2 - 135, HEIGHT / 2 + 4, WIDTH / 2 + 135, HEIGHT / 2 + 4, fill="#777777")
 			self.canvas.create_text(WIDTH / 2, HEIGHT / 2 + 27, text=f"SCORE {self.score:03d}  /  RESTARTING", fill="#bdbdbd", font=("TkFixedFont", 11, "bold"))
 		self.canvas.tag_raise("hud")
+
+	def draw_menu(self):
+		canvas = self.canvas
+		canvas.create_rectangle(95, 112, 705, 444, fill="#111111", outline="#eeeeee", width=3)
+		canvas.create_rectangle(103, 120, 697, 436, outline="#555555", width=1)
+		canvas.create_text(WIDTH / 2, 166, text="FLAPPY 1984", fill="#ffffff", font=("TkFixedFont", 30, "bold"))
+		canvas.create_text(WIDTH / 2, 213, text="CHOOSE PILOT MODE", fill="#aaaaaa", font=("TkFixedFont", 13, "bold"))
+		canvas.create_rectangle(140, 305, 390, 390, fill="#252525", outline="#eeeeee", width=2, tags="menu_auto")
+		canvas.create_text(265, 335, text="AUTOPILOT ON", fill="#ffffff", font=("TkFixedFont", 14, "bold"), tags="menu_auto")
+		canvas.create_text(265, 363, text="Computer flies", fill="#aaaaaa", font=("TkFixedFont", 10), tags="menu_auto")
+		canvas.create_rectangle(410, 305, 660, 390, fill="#252525", outline="#eeeeee", width=2, tags="menu_manual")
+		canvas.create_text(535, 335, text="AUTOPILOT OFF", fill="#ffffff", font=("TkFixedFont", 14, "bold"), tags="menu_manual")
+		canvas.create_text(535, 363, text="You fly: click / SPACE", fill="#aaaaaa", font=("TkFixedFont", 10), tags="menu_manual")
 
 	def tick(self):
 		self.update()
