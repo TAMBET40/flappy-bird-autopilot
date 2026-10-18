@@ -4,6 +4,12 @@
 
 A retro pixel-art Flappy Bird game with an optional autopilot, built with Python and Tkinter.
 
+## Play on Android
+
+[Open the touch-friendly web game](https://tambet40.github.io/flappy-bird-autopilot/)
+
+Open the link in Android Chrome. Choose **AUTOPILOT ON** to watch or **AUTOPILOT OFF** to fly by tapping the game screen.
+
 ## Start menu
 
 ![Start menu with autopilot on and off options](game-menu.png)
