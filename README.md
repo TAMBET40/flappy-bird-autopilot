@@ -1,7 +1,8 @@
 # Flappy Bird Autopilot
+
 ![Flappy Bird Autopilot gameplay screenshot](game-screenshot-hud-fixed.png)
 
-A Flappy Bird-inspired game with an automated pilot, built with Python and Tkinter.
+A retro pixel-art Flappy Bird game with an optional autopilot, built with Python and Tkinter.
 
 ## Download
 
