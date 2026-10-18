@@ -4,6 +4,10 @@
 
 A retro pixel-art Flappy Bird game with an optional autopilot, built with Python and Tkinter.
 
+## Start menu
+
+![Start menu with autopilot on and off options](game-menu.png)
+
 ## Download
 
 ### Download as a ZIP file
